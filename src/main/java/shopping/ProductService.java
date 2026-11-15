@@ -12,7 +12,7 @@ public class ProductService {
         this.productRepository = productRepository;
     }
 
-    @Transactional 
+    @Transactional
     public Product create(String name, Integer price, String imageUrl) {
         Product product = new Product(name, price, imageUrl);
         return productRepository.save(product);
@@ -27,5 +27,13 @@ public class ProductService {
     @Transactional(readOnly = true)
     public List<Product> findAll() {
         return productRepository.findAll();
+    }
+
+    @Transactional
+    public Product update(
+            Long productId, String name, Integer price, String imageUrl) {
+        Product product = findById(productId);
+        product.update(name, price, imageUrl);
+        return product;
     }
 }

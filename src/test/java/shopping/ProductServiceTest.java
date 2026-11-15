@@ -2,8 +2,6 @@ package shopping;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.endsWith;
-
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -69,13 +67,34 @@ class ProductServiceTest {
         entityManager.flush();
         entityManager.clear();
 
-       List<Product> products = productService.findAll();
+        List<Product> products = productService.findAll();
 
-       assertThat(products).extracting(Product::getId).containsExactlyInAnyOrder(first.getId(),second.getId());
+        assertThat(products).extracting(Product::getId).containsExactlyInAnyOrder(first.getId(), second.getId());
     }
 
     @Test
     void findAllReturnsEmptyListWhenNoProductsExist() {
         assertThat(productService.findAll()).isEmpty();
+    }
+
+    @Test
+    void updateChangesSavedProduct() {
+        Product saved = productService.create("키보드", 50000, "https://example.com/keyboard.jpg");
+        productService.update(
+                saved.getId(), "마우스", 40000, "https://example.com/mouse.jpg");
+        entityManager.flush();
+        entityManager.clear();
+
+        Product found = productRepository.findById(saved.getId()).orElseThrow();
+
+        assertThat(found.getName()).isEqualTo("마우스");
+        assertThat(found.getPrice()).isEqualTo(40000);
+        assertThat(found.getImageUrl()).isEqualTo("https://example.com/mouse.jpg");
+    }
+
+    @Test
+    void updateThrowsWhenProductDoesNotExist() {
+        assertThatThrownBy(() -> productService.update(-1L, "마우스", 20000, "https://example.com/moudse.jpg"))
+                .isInstanceOf(ProductNotFoundException.class);
     }
 }

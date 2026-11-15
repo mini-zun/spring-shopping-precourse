@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -110,5 +111,35 @@ class ProductControllerTest {
                                 .andExpect(status().isOk())
                                 .andExpect(jsonPath("$").isArray())
                                 .andExpect(jsonPath("$").isEmpty());
+        }
+
+        @Test
+        void updateReturnsUpdatedProduct() throws Exception {
+                Product product = savedProduct();
+                given(productService.update(
+                                1L, "키보드", 50000, "https://example.com/keyboard.jpg"))
+                                .willReturn(product);
+
+                mockMvc.perform(put("/api/products/1")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(requestBody()))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.id").value(1))
+                                .andExpect(jsonPath("$.name").value("키보드"))
+                                .andExpect(jsonPath("$.price").value(50000))
+                                .andExpect(jsonPath("$.imageUrl")
+                                                .value("https://example.com/keyboard.jpg"));
+        }
+
+        @Test
+        void updateReturnsNotFound() throws Exception {
+                given(productService.update(
+                                -1L, "키보드", 50000, "https://example.com/keyboard.jpg"))
+                                .willThrow(new ProductNotFoundException(-1L));
+
+                mockMvc.perform(put("/api/products/-1")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(requestBody()))
+                                .andExpect(status().isNotFound());
         }
 }

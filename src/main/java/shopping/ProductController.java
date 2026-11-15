@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.PutMapping;
 
 @RestController
 @RequestMapping("/api/products")
@@ -37,5 +38,13 @@ public class ProductController {
     @GetMapping
     public List<ProductResponse> findAll() {
         return productService.findAll().stream().map(ProductResponse::from).toList();
+    }
+
+    @PutMapping("/{productId}")
+    public ProductResponse update(
+            @PathVariable("productId") Long productId,
+            @RequestBody ProductUpdateRequest request) {
+        Product product = productService.update(productId, request.name(), request.price(), request.imageUrl());
+        return ProductResponse.from(product);
     }
 }
