@@ -2,6 +2,7 @@ package shopping;
 
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -28,7 +29,7 @@ class ProductControllerTest {
         given(productService.create(
                 "키보드", 50000, "https://example.com/keyboard.jpg"))
                 .willReturn(product);
-                
+
         mockMvc.perform(post("/api/products")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestBody()))
@@ -59,5 +60,28 @@ class ProductControllerTest {
                   "imageUrl": "https://example.com/keyboard.jpg"
                 }
                 """;
+    }
+
+    @Test
+    void findByIdReturnsProduct() throws Exception {
+        Product product = savedProduct();
+        given(productService.findById(1L)).willReturn(product);
+
+        mockMvc.perform(get("/api/products/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.name").value("키보드"))
+                .andExpect(jsonPath("$.price").value(50000))
+                .andExpect(jsonPath("$.imageUrl")
+                        .value("https://example.com/keyboard.jpg"));
+    }
+
+    @Test
+    void findByIdReturnsNotFound() throws Exception {
+        given(productService.findById(-1L))
+                .willThrow(new ProductNotFoundException(-1L));
+
+        mockMvc.perform(get("/api/products/-1"))
+                .andExpect(status().isNotFound());
     }
 }

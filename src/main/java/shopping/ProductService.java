@@ -15,5 +15,11 @@ public class ProductService {
     public Product create(String name, Integer price, String imageUrl) {
         Product product = new Product(name, price, imageUrl);
         return productRepository.save(product);
+
+    }
+    
+    @Transactional(readOnly = true)
+    public Product findById(Long productId) {
+        return productRepository.findById(productId).orElseThrow(() -> new ProductNotFoundException(productId));
     }
 }

@@ -1,8 +1,7 @@
 package shopping;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertWith;
-
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,5 +37,24 @@ class ProductServiceTest {
         assertThat(found.getName()).isEqualTo("키보드");
         assertThat(found.getPrice()).isEqualTo(50000);
         assertThat(found.getImageUrl()).isEqualTo("https://example.com/keyboard.jpg");
+    }
+
+    @Test
+    void findByIdReturnSavedPruduct() {
+        Product saved = productService.create("키보드", 50000, "https://example.com/keyboard.jpg");
+        entityManager.flush();
+        entityManager.clear();
+
+        Product found = productService.findById(saved.getId());
+
+        assertThat(found.getId()).isEqualTo(saved.getId());
+        assertThat(found.getName()).isEqualTo("키보드");
+        assertThat(found.getPrice()).isEqualTo(50000);
+        assertThat(found.getImageUrl()).isEqualTo("https://example.com/keyboard.jpg");
+    }
+
+    @Test
+    void findByIdThrowWhenProductDoesNotExist() {
+        assertThatThrownBy(() -> productService.findById(-1L)).isInstanceOf(ProductNotFoundException.class);
     }
 }
