@@ -1,6 +1,7 @@
 package shopping;
 
 import java.net.URI;
+import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -31,5 +32,10 @@ public class ProductController {
             @PathVariable("productId") Long productId) {
         Product product = productService.findById(productId);
         return ProductResponse.from(product);
+    }
+
+    @GetMapping
+    public List<ProductResponse> findAll() {
+        return productService.findAll().stream().map(ProductResponse::from).toList();
     }
 }
