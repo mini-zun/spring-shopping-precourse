@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
 
 @RestController
 @RequestMapping("/api/products")
@@ -47,4 +48,11 @@ public class ProductController {
         Product product = productService.update(productId, request.name(), request.price(), request.imageUrl());
         return ProductResponse.from(product);
     }
+
+    @DeleteMapping("/{productId}")
+    public ResponseEntity<Void> delete(
+        @PathVariable("productId") Long productId) {
+            productService.delete(productId);
+            return ResponseEntity.noContent().build();
+        }
 }

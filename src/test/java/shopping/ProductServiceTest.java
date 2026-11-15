@@ -97,4 +97,22 @@ class ProductServiceTest {
         assertThatThrownBy(() -> productService.update(-1L, "마우스", 20000, "https://example.com/moudse.jpg"))
                 .isInstanceOf(ProductNotFoundException.class);
     }
+
+    @Test
+    void deleteRemovesSavedProduct() {
+        Product saved = productService.create(
+                "키보드", 50000, "https://example.com/keyboard.jpg");
+
+        productService.delete(saved.getId());
+        entityManager.flush();
+        entityManager.clear();
+
+        assertThat(productRepository.findById(saved.getId())).isEmpty();
+    }
+
+    @Test
+    void deleteThrowsWhenProductDoesNotExist() {
+        assertThatThrownBy(() -> productService.delete(-1L))
+                .isInstanceOf(ProductNotFoundException.class);
+    }
 }

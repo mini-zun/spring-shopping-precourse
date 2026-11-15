@@ -8,6 +8,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.mockito.BDDMockito.willThrow;
+import static org.mockito.Mockito.verify;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -140,6 +143,24 @@ class ProductControllerTest {
                 mockMvc.perform(put("/api/products/-1")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(requestBody()))
+                                .andExpect(status().isNotFound());
+        }
+
+        @Test
+        void deleteReturnsNoContent() throws Exception {
+                mockMvc.perform(delete("/api/products/1"))
+                                .andExpect(status().isNoContent())
+                                .andExpect(jsonPath("$").doesNotExist());
+
+                verify(productService).delete(1L);
+        }
+
+        @Test
+        void deleteReturnsNotFound() throws Exception {
+                willThrow(new ProductNotFoundException(-1L))
+                                .given(productService).delete(-1L);
+
+                mockMvc.perform(delete("/api/products/-1"))
                                 .andExpect(status().isNotFound());
         }
 }
