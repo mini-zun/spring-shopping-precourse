@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.stream.Stream;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.CsvSource;
 
 @WebMvcTest(ProductController.class)
 class ProductControllerTest {
@@ -190,7 +191,49 @@ class ProductControllerTest {
         verifyNoInteractions(productService);
     }
 
+    @ParameterizedTest
+    @CsvSource({
+        "'()[]+-&/_', http://example.com/a.jpg",
+        "abcdefghijklmno, https://example.com/a.jpg",
+        "'상품 A', https://example.com/a.jpg"
+    })
+    void createAcceptsValidFormat(String name, String imageUrl) throws Exception {
+        Product product = savedProduct();
+        given(productService.create(name, 0, imageUrl)).willReturn(product);
+        String body = productJson("\"" + name + "\"", "0", "\"" + imageUrl + "\"");
+
+        mockMvc.perform(post("/api/products")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isCreated());
+
+        verify(productService).create(name, 0, imageUrl);
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+        "'()[]+-&/_', http://example.com/a.jpg",
+        "abcdefghijklmno, https://example.com/a.jpg",
+        "'상품 A', https://example.com/a.jpg"
+    })
+    void updateAcceptsValidFormat(String name, String imageUrl) throws Exception {
+        Product product = savedProduct();
+        given(productService.update(1L, name, 0, imageUrl)).willReturn(product);
+        String body = productJson("\"" + name + "\"", "0", "\"" + imageUrl + "\"");
+
+        mockMvc.perform(put("/api/products/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isOk());
+
+        verify(productService).update(1L, name, 0, imageUrl);
+    }
+
     private static Stream<String> invalidProductRequests() {
+        return Stream.concat(invalidBasicRequests(), invalidFormatRequests());
+    }
+
+    private static Stream<String> invalidBasicRequests() {
         return Stream.of(
                 productJson("null", "1000", "\"https://example.com/a.jpg\""),
                 productJson("\"\"", "1000", "\"https://example.com/a.jpg\""),
@@ -200,6 +243,17 @@ class ProductControllerTest {
                 productJson("\"keyboard\"", "-1", "\"https://example.com/a.jpg\""),
                 productJson("\"keyboard\"", "1000", "null"),
                 productJson("\"keyboard\"", "1000", "\"   \"")
+        );
+    }
+
+    private static Stream<String> invalidFormatRequests() {
+        return Stream.of(
+                productJson("\"상품@\"", "1000", "\"https://example.com/a.jpg\""),
+                productJson("\"특가!\"", "1000", "\"https://example.com/a.jpg\""),
+                productJson("\"상품*\"", "1000", "\"https://example.com/a.jpg\""),
+                productJson("\"keyboard\"", "1000", "\"not-a-url\""),
+                productJson("\"keyboard\"", "1000", "\"ftp://example.com/a.jpg\""),
+                productJson("\"keyboard\"", "1000", "\"https://\"")
         );
     }
 
