@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.stream.Stream;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.junit.jupiter.params.provider.CsvSource;
 
 @WebMvcTest(ProductController.class)
@@ -92,7 +93,9 @@ class ProductControllerTest {
                                 .willThrow(new ProductNotFoundException(-1L));
 
                 mockMvc.perform(get("/api/products/-1"))
-                                .andExpect(status().isNotFound());
+                                .andExpect(status().isNotFound())
+                                .andExpect(jsonPath("$.code").value("PRODUCT_NOT_FOUND"))
+                                .andExpect(jsonPath("$.message").value("상품을 찾을 수 없습니다. id=-1"));
         }
 
         @Test
@@ -175,7 +178,9 @@ class ProductControllerTest {
         mockMvc.perform(post("/api/products")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_REQUEST"))
+                .andExpect(jsonPath("$.message").isNotEmpty());
 
         verifyNoInteractions(productService);
     }
@@ -186,7 +191,9 @@ class ProductControllerTest {
         mockMvc.perform(put("/api/products/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_REQUEST"))
+                .andExpect(jsonPath("$.message").isNotEmpty());
 
         verifyNoInteractions(productService);
     }
@@ -227,6 +234,34 @@ class ProductControllerTest {
                 .andExpect(status().isOk());
 
         verify(productService).update(1L, name, 0, imageUrl);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"{", "{\"name\":\"keyboard\",\"price\":\"abc\"}"})
+    void createRejectsUnreadableJson(String body) throws Exception {
+        mockMvc.perform(post("/api/products")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_REQUEST"))
+                .andExpect(jsonPath("$.message")
+                        .value("요청 JSON 형식이나 값의 타입이 올바르지 않습니다."));
+
+        verifyNoInteractions(productService);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"{", "{\"name\":\"keyboard\",\"price\":\"abc\"}"})
+    void updateRejectsUnreadableJson(String body) throws Exception {
+        mockMvc.perform(put("/api/products/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_REQUEST"))
+                .andExpect(jsonPath("$.message")
+                        .value("요청 JSON 형식이나 값의 타입이 올바르지 않습니다."));
+
+        verifyNoInteractions(productService);
     }
 
     private static Stream<String> invalidProductRequests() {
