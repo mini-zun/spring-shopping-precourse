@@ -12,25 +12,22 @@ import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-@DataJpaTest(properties = {
-    "spring.flyway.enabled=false",
-    "spring.datasource.password=",
-    "spring.jpa.hibernate.ddl-auto=create-drop"
-})
+@DataJpaTest(
+        properties = {
+            "spring.flyway.enabled=false",
+            "spring.datasource.password=",
+            "spring.jpa.hibernate.ddl-auto=create-drop"
+        })
 @Import({MemberService.class, PasswordConfig.class})
 class MemberServiceTest {
 
-    @Autowired
-    private MemberService memberService;
+    @Autowired private MemberService memberService;
 
-    @Autowired
-    private MemberRepository memberRepository;
+    @Autowired private MemberRepository memberRepository;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    @Autowired private PasswordEncoder passwordEncoder;
 
-    @Autowired
-    private EntityManager entityManager;
+    @Autowired private EntityManager entityManager;
 
     @Test
     void registerNormalizesEmailAndStoresPasswordHash() {

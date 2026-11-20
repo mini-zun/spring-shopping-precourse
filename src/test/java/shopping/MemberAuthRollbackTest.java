@@ -10,24 +10,22 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
-@SpringBootTest(properties = {
-    "spring.datasource.url=jdbc:h2:mem:member-auth-rollback;DB_CLOSE_DELAY=-1",
-    "spring.datasource.driver-class-name=org.h2.Driver",
-    "spring.datasource.username=sa",
-    "spring.datasource.password=",
-    "spring.jpa.hibernate.ddl-auto=create-drop",
-    "spring.flyway.enabled=false"
-})
+@SpringBootTest(
+        properties = {
+            "spring.datasource.url=jdbc:h2:mem:member-auth-rollback;DB_CLOSE_DELAY=-1",
+            "spring.datasource.driver-class-name=org.h2.Driver",
+            "spring.datasource.username=sa",
+            "spring.datasource.password=",
+            "spring.jpa.hibernate.ddl-auto=create-drop",
+            "spring.flyway.enabled=false"
+        })
 class MemberAuthRollbackTest {
 
-    @Autowired
-    private MemberAuthService authService;
+    @Autowired private MemberAuthService authService;
 
-    @Autowired
-    private MemberRepository members;
+    @Autowired private MemberRepository members;
 
-    @MockitoBean
-    private TokenService tokenService;
+    @MockitoBean private TokenService tokenService;
 
     @Test
     void failedTokenIssueRollsBackNewMember() {

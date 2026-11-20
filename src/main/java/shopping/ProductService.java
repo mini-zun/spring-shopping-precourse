@@ -1,8 +1,8 @@
 package shopping;
 
+import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import java.util.List;
 
 @Service
 public class ProductService {
@@ -24,12 +24,13 @@ public class ProductService {
         validateProfanity(name);
         Product product = new Product(name, price, imageUrl);
         return productRepository.save(product);
-
     }
 
     @Transactional(readOnly = true)
     public Product findById(Long productId) {
-        return productRepository.findById(productId).orElseThrow(() -> new ProductNotFoundException(productId));
+        return productRepository
+                .findById(productId)
+                .orElseThrow(() -> new ProductNotFoundException(productId));
     }
 
     @Transactional(readOnly = true)
@@ -38,8 +39,7 @@ public class ProductService {
     }
 
     @Transactional
-    public Product update(
-            Long productId, String name, Integer price, String imageUrl) {
+    public Product update(Long productId, String name, Integer price, String imageUrl) {
         Product product = findById(productId);
         validateProfanity(name);
         product.update(name, price, imageUrl);
@@ -48,8 +48,10 @@ public class ProductService {
 
     @Transactional
     public void delete(Long productId) {
-        Product product = productRepository.findByIdForUpdate(productId)
-                .orElseThrow(() -> new ProductNotFoundException(productId));
+        Product product =
+                productRepository
+                        .findByIdForUpdate(productId)
+                        .orElseThrow(() -> new ProductNotFoundException(productId));
         wishRepository.deleteAllByProduct_Id(productId);
         productRepository.delete(product);
     }

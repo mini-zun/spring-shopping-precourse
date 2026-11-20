@@ -1,44 +1,40 @@
 package shopping;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.BDDMockito.given;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.BDDMockito.given;
 
 import jakarta.persistence.EntityManager;
 import java.time.Clock;
 import java.time.Instant;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.NullAndEmptySource;
-import org.junit.jupiter.params.provider.ValueSource;
 
-@DataJpaTest(properties = {
-        "spring.flyway.enabled=false",
-        "spring.datasource.password=",
-        "spring.jpa.hibernate.ddl-auto=create-drop"
-})
+@DataJpaTest(
+        properties = {
+            "spring.flyway.enabled=false",
+            "spring.datasource.password=",
+            "spring.jpa.hibernate.ddl-auto=create-drop"
+        })
 @Import(TokenService.class)
 class TokenServiceTest {
 
-    @Autowired
-    private TokenService tokenService;
+    @Autowired private TokenService tokenService;
 
-    @Autowired
-    private MemberRepository members;
+    @Autowired private MemberRepository members;
 
-    @Autowired
-    private MemberTokenRepository tokens;
+    @Autowired private MemberTokenRepository tokens;
 
-    @Autowired
-    private EntityManager entityManager;
+    @Autowired private EntityManager entityManager;
 
-    @MockitoBean
-    private Clock clock;
+    @MockitoBean private Clock clock;
 
     private final Instant now = Instant.parse("2026-11-21T00:00:00Z");
 
@@ -53,7 +49,8 @@ class TokenServiceTest {
         AuthTokenResponse response = tokenService.issue(member);
         entityManager.flush();
         entityManager.clear();
-        MemberToken stored = tokens.findById(TokenService.hashToken(response.token())).orElseThrow();
+        MemberToken stored =
+                tokens.findById(TokenService.hashToken(response.token())).orElseThrow();
         assertThat(response.token()).matches("[A-Za-z0-9_-]{43}");
         assertThat(response.tokenType()).isEqualTo("Bearer");
         assertThat(response.expiresIn()).isEqualTo(86400);
@@ -79,13 +76,12 @@ class TokenServiceTest {
         entityManager.flush();
         entityManager.clear();
 
-        assertThat(tokenService.authenticate(response.token()))
-                .isEqualTo(member.getId());
+        assertThat(tokenService.authenticate(response.token())).isEqualTo(member.getId());
     }
 
     @ParameterizedTest
     @NullAndEmptySource
-    @ValueSource(strings = { "   ", "unknown-token" })
+    @ValueSource(strings = {"   ", "unknown-token"})
     void authenticateRejectsMissingOrUnknownToken(String token) {
         assertThatThrownBy(() -> tokenService.authenticate(token))
                 .isInstanceOf(InvalidTokenException.class);
@@ -97,12 +93,11 @@ class TokenServiceTest {
         AuthTokenResponse response = tokenService.issue(member);
         given(clock.instant()).willReturn(now.plusSeconds(86399));
 
-        assertThat(tokenService.authenticate(response.token()))
-                .isEqualTo(member.getId());
+        assertThat(tokenService.authenticate(response.token())).isEqualTo(member.getId());
     }
 
     @ParameterizedTest
-    @ValueSource(longs = { 86400, 86401 })
+    @ValueSource(longs = {86400, 86401})
     void authenticateRejectsTokenAtOrAfterExpiry(long seconds) {
         Member member = members.save(new Member("member@example.com", "hash"));
         AuthTokenResponse response = tokenService.issue(member);

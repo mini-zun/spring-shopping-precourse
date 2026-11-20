@@ -19,8 +19,7 @@ public class Member {
     @Column(nullable = false)
     private String passwordHash;
 
-    protected Member() {
-    }
+    protected Member() {}
 
     public Member(String email, String passwordHash) {
         this.email = email;

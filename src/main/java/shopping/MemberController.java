@@ -22,14 +22,15 @@ public class MemberController {
     @PostMapping("/register")
     public ResponseEntity<AuthTokenResponse> register(
             @Valid @RequestBody MemberRegisterRequest request) {
-        AuthTokenResponse response = memberAuthService.register(request.email(), request.password());
+        AuthTokenResponse response =
+                memberAuthService.register(request.email(), request.password());
         return ResponseEntity.status(HttpStatus.CREATED)
-                .cacheControl(CacheControl.noStore()).body(response);
+                .cacheControl(CacheControl.noStore())
+                .body(response);
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AuthTokenResponse> login(
-            @Valid @RequestBody MemberLoginRequest request) {
+    public ResponseEntity<AuthTokenResponse> login(@Valid @RequestBody MemberLoginRequest request) {
         AuthTokenResponse response = memberAuthService.login(request.email(), request.password());
         return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(response);
     }

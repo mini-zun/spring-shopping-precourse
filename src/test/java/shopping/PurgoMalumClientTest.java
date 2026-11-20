@@ -28,8 +28,7 @@ class PurgoMalumClientTest {
 
     @BeforeEach
     void setUp() {
-        RestClient.Builder builder = RestClient.builder()
-                .baseUrl("https://www.purgomalum.com");
+        RestClient.Builder builder = RestClient.builder().baseUrl("https://www.purgomalum.com");
         server = MockRestServiceServer.bindTo(builder).build();
         client = new PurgoMalumClient(builder.build());
     }
@@ -42,8 +41,9 @@ class PurgoMalumClientTest {
     @ParameterizedTest
     @CsvSource({"true, true", "false, false"})
     void returnsProfanityResult(String response, boolean expected) {
-        server.expect(requestTo(
-                        "https://www.purgomalum.com/service/containsprofanity?text=keyboard"))
+        server.expect(
+                        requestTo(
+                                "https://www.purgomalum.com/service/containsprofanity?text=keyboard"))
                 .andExpect(method(HttpMethod.GET))
                 .andRespond(withSuccess(response, MediaType.TEXT_PLAIN));
 
@@ -53,8 +53,9 @@ class PurgoMalumClientTest {
     @ParameterizedTest
     @ValueSource(strings = {"", "unexpected", "{\"error\":\"failed\"}"})
     void rejectsUnexpectedResponse(String response) {
-        server.expect(requestTo(
-                        "https://www.purgomalum.com/service/containsprofanity?text=keyboard"))
+        server.expect(
+                        requestTo(
+                                "https://www.purgomalum.com/service/containsprofanity?text=keyboard"))
                 .andRespond(withSuccess(response, MediaType.TEXT_PLAIN));
 
         assertThatThrownBy(() -> client.containsProfanity("keyboard"))
@@ -63,8 +64,9 @@ class PurgoMalumClientTest {
 
     @Test
     void convertsHttpErrorToUnavailableException() {
-        server.expect(requestTo(
-                        "https://www.purgomalum.com/service/containsprofanity?text=keyboard"))
+        server.expect(
+                        requestTo(
+                                "https://www.purgomalum.com/service/containsprofanity?text=keyboard"))
                 .andRespond(withStatus(HttpStatus.SERVICE_UNAVAILABLE));
 
         assertThatThrownBy(() -> client.containsProfanity("keyboard"))
@@ -73,8 +75,9 @@ class PurgoMalumClientTest {
 
     @Test
     void convertsTimeoutToUnavailableException() {
-        server.expect(requestTo(
-                        "https://www.purgomalum.com/service/containsprofanity?text=keyboard"))
+        server.expect(
+                        requestTo(
+                                "https://www.purgomalum.com/service/containsprofanity?text=keyboard"))
                 .andRespond(withException(new SocketTimeoutException("timeout")));
 
         assertThatThrownBy(() -> client.containsProfanity("keyboard"))

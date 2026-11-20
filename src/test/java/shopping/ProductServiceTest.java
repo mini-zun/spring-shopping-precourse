@@ -5,31 +5,28 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
 
 import jakarta.persistence.EntityManager;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import java.util.List;
 
-@DataJpaTest(properties = {
-        "spring.flyway.enabled=false",
-        "spring.datasource.password=",
-        "spring.jpa.hibernate.ddl-auto=create-drop"
-})
+@DataJpaTest(
+        properties = {
+            "spring.flyway.enabled=false",
+            "spring.datasource.password=",
+            "spring.jpa.hibernate.ddl-auto=create-drop"
+        })
 @Import(ProductService.class)
 class ProductServiceTest {
-    @MockitoBean
-    private ProfanityChecker profanityChecker;
+    @MockitoBean private ProfanityChecker profanityChecker;
 
-    @Autowired
-    private ProductService productService;
+    @Autowired private ProductService productService;
 
-    @Autowired
-    private ProductRepository productRepository;
+    @Autowired private ProductRepository productRepository;
 
-    @Autowired
-    private EntityManager entityManager;
+    @Autowired private EntityManager entityManager;
 
     @Test
     void createSaveProduct() {
@@ -62,7 +59,8 @@ class ProductServiceTest {
 
     @Test
     void findByIdThrowWhenProductDoesNotExist() {
-        assertThatThrownBy(() -> productService.findById(-1L)).isInstanceOf(ProductNotFoundException.class);
+        assertThatThrownBy(() -> productService.findById(-1L))
+                .isInstanceOf(ProductNotFoundException.class);
     }
 
     @Test
@@ -75,7 +73,9 @@ class ProductServiceTest {
 
         List<Product> products = productService.findAll();
 
-        assertThat(products).extracting(Product::getId).containsExactlyInAnyOrder(first.getId(), second.getId());
+        assertThat(products)
+                .extracting(Product::getId)
+                .containsExactlyInAnyOrder(first.getId(), second.getId());
     }
 
     @Test
@@ -86,8 +86,7 @@ class ProductServiceTest {
     @Test
     void updateChangesSavedProduct() {
         Product saved = productService.create("키보드", 50000, "https://example.com/keyboard.jpg");
-        productService.update(
-                saved.getId(), "마우스", 40000, "https://example.com/mouse.jpg");
+        productService.update(saved.getId(), "마우스", 40000, "https://example.com/mouse.jpg");
         entityManager.flush();
         entityManager.clear();
 
@@ -100,14 +99,16 @@ class ProductServiceTest {
 
     @Test
     void updateThrowsWhenProductDoesNotExist() {
-        assertThatThrownBy(() -> productService.update(-1L, "마우스", 20000, "https://example.com/moudse.jpg"))
+        assertThatThrownBy(
+                        () ->
+                                productService.update(
+                                        -1L, "마우스", 20000, "https://example.com/moudse.jpg"))
                 .isInstanceOf(ProductNotFoundException.class);
     }
 
     @Test
     void deleteRemovesSavedProduct() {
-        Product saved = productService.create(
-                "키보드", 50000, "https://example.com/keyboard.jpg");
+        Product saved = productService.create("키보드", 50000, "https://example.com/keyboard.jpg");
 
         productService.delete(saved.getId());
         entityManager.flush();
@@ -126,8 +127,8 @@ class ProductServiceTest {
     void createRejectsProfanityWithoutSaving() {
         given(profanityChecker.containsProfanity("badword")).willReturn(true);
 
-        assertThatThrownBy(() -> productService.create(
-                "badword", 1000, "https://example.com/a.jpg"))
+        assertThatThrownBy(
+                        () -> productService.create("badword", 1000, "https://example.com/a.jpg"))
                 .isInstanceOf(ProfanityDetectedException.class);
 
         assertThat(productRepository.findAll()).isEmpty();
@@ -135,18 +136,17 @@ class ProductServiceTest {
 
     @Test
     void updateRejectsProfanityWithoutChangingProduct() {
-        Product saved = productService.create(
-                "키보드", 50000, "https://example.com/keyboard.jpg");
+        Product saved = productService.create("키보드", 50000, "https://example.com/keyboard.jpg");
         given(profanityChecker.containsProfanity("badword")).willReturn(true);
-        assertThatThrownBy(() -> productService.update(
-                saved.getId(), "badword", 1000, "https://example.com/a.jpg"))
+        assertThatThrownBy(
+                        () ->
+                                productService.update(
+                                        saved.getId(),
+                                        "badword",
+                                        1000,
+                                        "https://example.com/a.jpg"))
                 .isInstanceOf(ProfanityDetectedException.class);
-        entityManager.flush();
-        entityManager.clear();
-        Product found = productRepository.findById(saved.getId()).orElseThrow();
-        assertThat(found.getName()).isEqualTo("키보드");
-        assertThat(found.getPrice()).isEqualTo(50000);
-        assertThat(found.getImageUrl()).isEqualTo("https://example.com/keyboard.jpg");
+        assertOriginalProductPersisted(saved.getId());
     }
 
     @Test
@@ -154,8 +154,10 @@ class ProductServiceTest {
         given(profanityChecker.containsProfanity("키보드"))
                 .willThrow(new ProfanityServiceUnavailableException());
 
-        assertThatThrownBy(() -> productService.create(
-                "키보드", 50000, "https://example.com/keyboard.jpg"))
+        assertThatThrownBy(
+                        () ->
+                                productService.create(
+                                        "키보드", 50000, "https://example.com/keyboard.jpg"))
                 .isInstanceOf(ProfanityServiceUnavailableException.class);
 
         assertThat(productRepository.findAll()).isEmpty();
@@ -163,16 +165,24 @@ class ProductServiceTest {
 
     @Test
     void updateKeepsProductWhenProfanityServiceFails() {
-        Product saved = productService.create(
-                "키보드", 50000, "https://example.com/keyboard.jpg");
+        Product saved = productService.create("키보드", 50000, "https://example.com/keyboard.jpg");
         given(profanityChecker.containsProfanity("마우스"))
                 .willThrow(new ProfanityServiceUnavailableException());
-        assertThatThrownBy(() -> productService.update(
-                saved.getId(), "마우스", 20000, "https://example.com/mouse.jpg"))
+        assertThatThrownBy(
+                        () ->
+                                productService.update(
+                                        saved.getId(),
+                                        "마우스",
+                                        20000,
+                                        "https://example.com/mouse.jpg"))
                 .isInstanceOf(ProfanityServiceUnavailableException.class);
+        assertOriginalProductPersisted(saved.getId());
+    }
+
+    private void assertOriginalProductPersisted(Long productId) {
         entityManager.flush();
         entityManager.clear();
-        Product found = productRepository.findById(saved.getId()).orElseThrow();
+        Product found = productRepository.findById(productId).orElseThrow();
         assertThat(found.getName()).isEqualTo("키보드");
         assertThat(found.getPrice()).isEqualTo(50000);
         assertThat(found.getImageUrl()).isEqualTo("https://example.com/keyboard.jpg");

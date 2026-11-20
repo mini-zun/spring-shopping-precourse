@@ -28,34 +28,31 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.transaction.annotation.Transactional;
 
-@SpringBootTest(properties = {
-    "spring.datasource.url=jdbc:h2:mem:wish-api;DB_CLOSE_DELAY=-1",
-    "spring.datasource.driver-class-name=org.h2.Driver",
-    "spring.datasource.username=sa", "spring.datasource.password=",
-    "spring.jpa.hibernate.ddl-auto=create-drop", "spring.flyway.enabled=false",
-    "spring.jpa.open-in-view=false"
-})
+@SpringBootTest(
+        properties = {
+            "spring.datasource.url=jdbc:h2:mem:wish-api;DB_CLOSE_DELAY=-1",
+            "spring.datasource.driver-class-name=org.h2.Driver",
+            "spring.datasource.username=sa",
+            "spring.datasource.password=",
+            "spring.jpa.hibernate.ddl-auto=create-drop",
+            "spring.flyway.enabled=false",
+            "spring.jpa.open-in-view=false"
+        })
 @AutoConfigureMockMvc
 @Transactional
 class WishApiTest {
 
-    @Autowired
-    private MockMvc mockMvc;
+    @Autowired private MockMvc mockMvc;
 
-    @Autowired
-    private MemberRepository members;
+    @Autowired private MemberRepository members;
 
-    @Autowired
-    private ProductRepository products;
+    @Autowired private ProductRepository products;
 
-    @Autowired
-    private WishRepository wishes;
+    @Autowired private WishRepository wishes;
 
-    @Autowired
-    private TokenService tokenService;
+    @Autowired private TokenService tokenService;
 
-    @MockitoBean
-    private Clock clock;
+    @MockitoBean private Clock clock;
 
     private final Instant now = Instant.parse("2026-11-21T00:00:00Z");
     private Member owner;
@@ -92,8 +89,10 @@ class WishApiTest {
     void listIgnoresClientSuppliedMemberIdAndSeparatesMembers() throws Exception {
         Long ownerWish = addWish(ownerToken, product.getId());
         addWish(otherToken, product.getId());
-        mockMvc.perform(get("/api/wishes").param("memberId", other.getId().toString())
-                        .header("Authorization", "Bearer " + ownerToken))
+        mockMvc.perform(
+                        get("/api/wishes")
+                                .param("memberId", other.getId().toString())
+                                .header("Authorization", "Bearer " + ownerToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0].id").value(ownerWish.intValue()));
@@ -103,14 +102,18 @@ class WishApiTest {
     void returnsEmptyArrayForMemberWithoutWishes() throws Exception {
         addWish(otherToken, product.getId());
         mockMvc.perform(get("/api/wishes").header("Authorization", "Bearer " + ownerToken))
-                .andExpect(status().isOk()).andExpect(content().json("[]"));
+                .andExpect(status().isOk())
+                .andExpect(content().json("[]"));
     }
 
     @Test
     void duplicateReturnsConflictAndKeepsOneWish() throws Exception {
         addWish(ownerToken, product.getId());
-        mockMvc.perform(post("/api/wishes").header("Authorization", "Bearer " + ownerToken)
-                        .contentType(MediaType.APPLICATION_JSON).content(productBody(product.getId())))
+        mockMvc.perform(
+                        post("/api/wishes")
+                                .header("Authorization", "Bearer " + ownerToken)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(productBody(product.getId())))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.code").value("DUPLICATE_WISH"));
         assertThat(wishes.count()).isEqualTo(1);
@@ -118,8 +121,11 @@ class WishApiTest {
 
     @Test
     void missingProductReturnsNotFoundWithoutSaving() throws Exception {
-        mockMvc.perform(post("/api/wishes").header("Authorization", "Bearer " + ownerToken)
-                        .contentType(MediaType.APPLICATION_JSON).content(productBody(Long.MAX_VALUE)))
+        mockMvc.perform(
+                        post("/api/wishes")
+                                .header("Authorization", "Bearer " + ownerToken)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(productBody(Long.MAX_VALUE)))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code").value("PRODUCT_NOT_FOUND"));
         assertThat(wishes.count()).isZero();
@@ -128,9 +134,11 @@ class WishApiTest {
     @Test
     void deletingOwnedWishReturnsEmpty204AndKeepsProduct() throws Exception {
         Long wishId = addWish(ownerToken, product.getId());
-        mockMvc.perform(delete("/api/wishes/" + wishId)
-                        .header("Authorization", "Bearer " + ownerToken))
-                .andExpect(status().isNoContent()).andExpect(content().string(""));
+        mockMvc.perform(
+                        delete("/api/wishes/" + wishId)
+                                .header("Authorization", "Bearer " + ownerToken))
+                .andExpect(status().isNoContent())
+                .andExpect(content().string(""));
         assertThat(wishes.findById(wishId)).isEmpty();
         assertThat(products.findById(product.getId())).isPresent();
     }
@@ -138,8 +146,9 @@ class WishApiTest {
     @Test
     void deletingAnotherMembersWishReturnsForbiddenAndKeepsIt() throws Exception {
         Long wishId = addWish(ownerToken, product.getId());
-        mockMvc.perform(delete("/api/wishes/" + wishId)
-                        .header("Authorization", "Bearer " + otherToken))
+        mockMvc.perform(
+                        delete("/api/wishes/" + wishId)
+                                .header("Authorization", "Bearer " + otherToken))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.code").value("WISH_ACCESS_DENIED"));
         assertThat(wishes.findById(wishId)).isPresent();
@@ -147,18 +156,29 @@ class WishApiTest {
 
     @Test
     void deletingMissingWishReturnsNotFound() throws Exception {
-        mockMvc.perform(delete("/api/wishes/" + Long.MAX_VALUE)
-                        .header("Authorization", "Bearer " + ownerToken))
+        mockMvc.perform(
+                        delete("/api/wishes/" + Long.MAX_VALUE)
+                                .header("Authorization", "Bearer " + ownerToken))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code").value("WISH_NOT_FOUND"));
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"{}", "{", "{\"productId\":null}", "{\"productId\":0}",
-        "{\"productId\":-1}", "{\"productId\":\"abc\"}"})
+    @ValueSource(
+            strings = {
+                "{}",
+                "{",
+                "{\"productId\":null}",
+                "{\"productId\":0}",
+                "{\"productId\":-1}",
+                "{\"productId\":\"abc\"}"
+            })
     void invalidWishRequestReturns400WithoutSaving(String body) throws Exception {
-        mockMvc.perform(post("/api/wishes").header("Authorization", "Bearer " + ownerToken)
-                        .contentType(MediaType.APPLICATION_JSON).content(body))
+        mockMvc.perform(
+                        post("/api/wishes")
+                                .header("Authorization", "Bearer " + ownerToken)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(body))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("INVALID_REQUEST"));
         assertThat(wishes.count()).isZero();
@@ -166,15 +186,25 @@ class WishApiTest {
 
     @ParameterizedTest
     @NullAndEmptySource
-    @ValueSource(strings = {"Bearer", "Bearer ", "Basic abc", "Bearer unknown-token",
-        "Bearer abc def", "Bearer abc,def"})
-    void allWishOperationsRejectMissingOrInvalidAuthorization(String authorization) throws Exception {
+    @ValueSource(
+            strings = {
+                "Bearer",
+                "Bearer ",
+                "Basic abc",
+                "Bearer unknown-token",
+                "Bearer abc def",
+                "Bearer abc,def"
+            })
+    void allWishOperationsRejectMissingOrInvalidAuthorization(String authorization)
+            throws Exception {
         mockMvc.perform(withAuth(get("/api/wishes"), authorization))
                 .andExpect(status().isUnauthorized())
                 .andExpect(header().string("WWW-Authenticate", "Bearer"))
                 .andExpect(jsonPath("$.code").value("INVALID_TOKEN"));
-        mockMvc.perform(withAuth(post("/api/wishes"), authorization)
-                        .contentType(MediaType.APPLICATION_JSON).content(productBody(product.getId())))
+        mockMvc.perform(
+                        withAuth(post("/api/wishes"), authorization)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(productBody(product.getId())))
                 .andExpect(status().isUnauthorized());
         mockMvc.perform(withAuth(delete("/api/wishes/1"), authorization))
                 .andExpect(status().isUnauthorized());
@@ -195,8 +225,10 @@ class WishApiTest {
         mockMvc.perform(withAuth(get("/api/wishes"), authorization))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.code").value("INVALID_TOKEN"));
-        mockMvc.perform(withAuth(post("/api/wishes"), authorization)
-                        .contentType(MediaType.APPLICATION_JSON).content(productBody(product.getId())))
+        mockMvc.perform(
+                        withAuth(post("/api/wishes"), authorization)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(productBody(product.getId())))
                 .andExpect(status().isUnauthorized());
         mockMvc.perform(withAuth(delete("/api/wishes/1"), authorization))
                 .andExpect(status().isUnauthorized());
@@ -209,36 +241,54 @@ class WishApiTest {
         mockMvc.perform(delete("/api/products/" + product.getId()))
                 .andExpect(status().isNoContent());
         mockMvc.perform(withAuth(get("/api/wishes"), "Bearer " + ownerToken))
-                .andExpect(status().isOk()).andExpect(content().json("[]"));
+                .andExpect(status().isOk())
+                .andExpect(content().json("[]"));
         mockMvc.perform(withAuth(get("/api/wishes"), "Bearer " + otherToken))
-                .andExpect(status().isOk()).andExpect(content().json("[]"));
+                .andExpect(status().isOk())
+                .andExpect(content().json("[]"));
     }
 
     @Test
     void invalidWishPathReturnsCommon400() throws Exception {
-        mockMvc.perform(delete("/api/wishes/not-a-number")
-                        .header("Authorization", "Bearer " + ownerToken))
+        mockMvc.perform(
+                        delete("/api/wishes/not-a-number")
+                                .header("Authorization", "Bearer " + ownerToken))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("INVALID_REQUEST"));
     }
 
     @Test
     void tokenFromMemberApiCanAccessWishes() throws Exception {
-        String body = "{\"email\":\"signup@example.com\",\"password\":\"password123!\"}";
-        String json = mockMvc.perform(post("/api/members/register")
-                        .contentType(MediaType.APPLICATION_JSON).content(body))
-                .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
-        String token = JsonPath.read(json, "$.token");
+        String token = registerMemberAndGetToken();
         Long wishId = addWish(token, product.getId());
         Member member = members.findByEmail("signup@example.com").orElseThrow();
         assertThat(wishes.findById(wishId).orElseThrow().isOwnedBy(member.getId())).isTrue();
     }
 
+    private String registerMemberAndGetToken() throws Exception {
+        String body = "{\"email\":\"signup@example.com\",\"password\":\"password123!\"}";
+        String json =
+                mockMvc.perform(
+                                post("/api/members/register")
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(body))
+                        .andExpect(status().isCreated())
+                        .andReturn()
+                        .getResponse()
+                        .getContentAsString();
+        return JsonPath.read(json, "$.token");
+    }
+
     private Long addWish(String token, Long productId) throws Exception {
-        MockHttpServletResponse response = mockMvc.perform(post("/api/wishes")
-                        .header("Authorization", "Bearer " + token)
-                        .contentType(MediaType.APPLICATION_JSON).content(productBody(productId)))
-                .andExpect(status().isCreated()).andReturn().getResponse();
+        MockHttpServletResponse response =
+                mockMvc.perform(
+                                post("/api/wishes")
+                                        .header("Authorization", "Bearer " + token)
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(productBody(productId)))
+                        .andExpect(status().isCreated())
+                        .andReturn()
+                        .getResponse();
         Number wishId = JsonPath.read(response.getContentAsString(), "$.id");
         assertThat(response.getHeader("Location")).isEqualTo("/api/wishes/" + wishId);
         return wishId.longValue();

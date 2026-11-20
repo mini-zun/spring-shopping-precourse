@@ -10,12 +10,12 @@ public class Product {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     private String name;
     private Integer price;
     private String imageUrl;
 
-    protected Product() {
-    }
+    protected Product() {}
 
     public Product(String name, Integer price, String imageUrl) {
         this.name = name;

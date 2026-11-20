@@ -11,8 +11,11 @@ import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 
 @Entity
-@Table(uniqueConstraints = @UniqueConstraint(
-        name = "uk_wish_member_product", columnNames = {"member_id", "product_id"}))
+@Table(
+        uniqueConstraints =
+                @UniqueConstraint(
+                        name = "uk_wish_member_product",
+                        columnNames = {"member_id", "product_id"}))
 public class Wish {
 
     @Id
@@ -27,8 +30,7 @@ public class Wish {
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
 
-    protected Wish() {
-    }
+    protected Wish() {}
 
     public Wish(Member member, Product product) {
         this.member = member;

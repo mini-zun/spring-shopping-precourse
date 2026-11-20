@@ -1,7 +1,7 @@
 package shopping;
 
-import java.util.Locale;
 import java.sql.SQLException;
+import java.util.Locale;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -14,9 +14,7 @@ public class MemberService {
     private final PasswordEncoder passwordEncoder;
     private final String dummyPasswordHash;
 
-    public MemberService(
-            MemberRepository memberRepository,
-            PasswordEncoder passwordEncoder) {
+    public MemberService(MemberRepository memberRepository, PasswordEncoder passwordEncoder) {
         this.memberRepository = memberRepository;
         this.passwordEncoder = passwordEncoder;
         this.dummyPasswordHash = passwordEncoder.encode("unused-login-password");
@@ -33,8 +31,10 @@ public class MemberService {
     @Transactional(readOnly = true)
     public Member login(String email, String password) {
         String normalizedEmail = email.strip().toLowerCase(Locale.ROOT);
-        Member member = memberRepository.findByEmail(normalizedEmail)
-                .orElseThrow(() -> missingMember(password));
+        Member member =
+                memberRepository
+                        .findByEmail(normalizedEmail)
+                        .orElseThrow(() -> missingMember(password));
         if (!passwordEncoder.matches(password, member.getPasswordHash())) {
             throw new InvalidCredentialsException();
         }

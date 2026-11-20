@@ -15,28 +15,26 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-@SpringBootTest(properties = {
-    "spring.datasource.url=jdbc:h2:mem:wish-concurrency;DB_CLOSE_DELAY=-1",
-    "spring.datasource.driver-class-name=org.h2.Driver",
-    "spring.datasource.username=sa", "spring.datasource.password=",
-    "spring.jpa.hibernate.ddl-auto=create-drop", "spring.flyway.enabled=false"
-})
+@SpringBootTest(
+        properties = {
+            "spring.datasource.url=jdbc:h2:mem:wish-concurrency;DB_CLOSE_DELAY=-1",
+            "spring.datasource.driver-class-name=org.h2.Driver",
+            "spring.datasource.username=sa",
+            "spring.datasource.password=",
+            "spring.jpa.hibernate.ddl-auto=create-drop",
+            "spring.flyway.enabled=false"
+        })
 class WishConcurrencyTest {
 
-    @Autowired
-    private WishService service;
+    @Autowired private WishService service;
 
-    @Autowired
-    private ProductService productService;
+    @Autowired private ProductService productService;
 
-    @Autowired
-    private WishRepository wishes;
+    @Autowired private WishRepository wishes;
 
-    @Autowired
-    private MemberRepository members;
+    @Autowired private MemberRepository members;
 
-    @Autowired
-    private ProductRepository products;
+    @Autowired private ProductRepository products;
 
     private Long memberId;
     private Long productId;
@@ -44,8 +42,9 @@ class WishConcurrencyTest {
     @BeforeEach
     void setUp() {
         memberId = members.saveAndFlush(new Member("race@example.com", "hash")).getId();
-        productId = products.saveAndFlush(
-                new Product("keyboard", 1000, "https://example.com/a.jpg")).getId();
+        productId =
+                products.saveAndFlush(new Product("keyboard", 1000, "https://example.com/a.jpg"))
+                        .getId();
     }
 
     @AfterEach
@@ -93,16 +92,17 @@ class WishConcurrencyTest {
             Future<String> firstResult = submit(executor, start, first);
             Future<String> secondResult = submit(executor, start, second);
             start.countDown();
-            return List.of(firstResult.get(10, TimeUnit.SECONDS),
-                    secondResult.get(10, TimeUnit.SECONDS));
+            return List.of(
+                    firstResult.get(10, TimeUnit.SECONDS), secondResult.get(10, TimeUnit.SECONDS));
         }
     }
 
     private Future<String> submit(
             ExecutorService executor, CountDownLatch start, Callable<String> operation) {
-        return executor.submit(() -> {
-            start.await();
-            return operation.call();
-        });
+        return executor.submit(
+                () -> {
+                    start.await();
+                    return operation.call();
+                });
     }
 }

@@ -18,15 +18,18 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class MemberAuthenticatorTest {
 
-    @Mock
-    private TokenService tokenService;
+    @Mock private TokenService tokenService;
 
-    @InjectMocks
-    private MemberAuthenticator authenticator;
+    @InjectMocks private MemberAuthenticator authenticator;
 
     @ParameterizedTest
-    @ValueSource(strings = {"Bearer valid-token_123", "bearer valid-token_123",
-        "BEARER valid-token_123", "Bearer   valid-token_123"})
+    @ValueSource(
+            strings = {
+                "Bearer valid-token_123",
+                "bearer valid-token_123",
+                "BEARER valid-token_123",
+                "Bearer   valid-token_123"
+            })
     void extractsTokenAndReturnsAuthenticatedMember(String header) {
         given(tokenService.authenticate("valid-token_123")).willReturn(1L);
         assertThat(authenticator.authenticate(header)).isEqualTo(1L);
@@ -35,8 +38,18 @@ class MemberAuthenticatorTest {
 
     @ParameterizedTest
     @NullAndEmptySource
-    @ValueSource(strings = {"   ", "Bearer", "Bearer ", "Basic abc", "Bearer abc def",
-        "Bearer abc,def", "Bearer abc!", "Bearer abc\n", " Bearer abc"})
+    @ValueSource(
+            strings = {
+                "   ",
+                "Bearer",
+                "Bearer ",
+                "Basic abc",
+                "Bearer abc def",
+                "Bearer abc,def",
+                "Bearer abc!",
+                "Bearer abc\n",
+                " Bearer abc"
+            })
     void rejectsMalformedHeaderBeforeTokenLookup(String header) {
         assertThatThrownBy(() -> authenticator.authenticate(header))
                 .isInstanceOf(InvalidTokenException.class);

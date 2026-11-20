@@ -9,28 +9,26 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.dao.DataIntegrityViolationException;
 
-@DataJpaTest(properties = {
-    "spring.flyway.enabled=false",
-    "spring.datasource.password=",
-    "spring.jpa.hibernate.ddl-auto=create-drop"
-})
+@DataJpaTest(
+        properties = {
+            "spring.flyway.enabled=false",
+            "spring.datasource.password=",
+            "spring.jpa.hibernate.ddl-auto=create-drop"
+        })
 class MemberRepositoryTest {
 
-    @Autowired
-    private MemberRepository memberRepository;
+    @Autowired private MemberRepository memberRepository;
 
-    @Autowired
-    private EntityManager entityManager;
+    @Autowired private EntityManager entityManager;
 
     @Test
     void savesAndFindsMemberByEmail() {
-        Member saved = memberRepository.save(
-                new Member("member@example.com", "test-password-hash"));
+        Member saved =
+                memberRepository.save(new Member("member@example.com", "test-password-hash"));
         entityManager.flush();
         entityManager.clear();
 
-        Member found = memberRepository.findByEmail("member@example.com")
-                .orElseThrow();
+        Member found = memberRepository.findByEmail("member@example.com").orElseThrow();
 
         assertThat(found.getId()).isNotNull();
         assertThat(found.getId()).isEqualTo(saved.getId());
@@ -40,32 +38,29 @@ class MemberRepositoryTest {
 
     @Test
     void returnsEmptyWhenEmailDoesNotExist() {
-        assertThat(memberRepository.findByEmail("missing@example.com"))
-                .isEmpty();
+        assertThat(memberRepository.findByEmail("missing@example.com")).isEmpty();
     }
 
     @Test
     void existsByEmailReturnsTrueForRegisteredEmail() {
-        memberRepository.saveAndFlush(
-                new Member("member@example.com", "test-password-hash"));
+        memberRepository.saveAndFlush(new Member("member@example.com", "test-password-hash"));
 
-        assertThat(memberRepository.existsByEmail("member@example.com"))
-                .isTrue();
+        assertThat(memberRepository.existsByEmail("member@example.com")).isTrue();
     }
 
     @Test
     void existsByEmailReturnsFalseForUnknownEmail() {
-        assertThat(memberRepository.existsByEmail("missing@example.com"))
-                .isFalse();
+        assertThat(memberRepository.existsByEmail("missing@example.com")).isFalse();
     }
 
     @Test
     void rejectsDuplicateEmail() {
-        memberRepository.saveAndFlush(
-                new Member("member@example.com", "first-hash"));
+        memberRepository.saveAndFlush(new Member("member@example.com", "first-hash"));
 
-        assertThatThrownBy(() -> memberRepository.saveAndFlush(
-                new Member("member@example.com", "second-hash")))
+        assertThatThrownBy(
+                        () ->
+                                memberRepository.saveAndFlush(
+                                        new Member("member@example.com", "second-hash")))
                 .isInstanceOf(DataIntegrityViolationException.class);
     }
 }

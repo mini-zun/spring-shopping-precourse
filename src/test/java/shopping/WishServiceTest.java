@@ -11,33 +11,28 @@ import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
-@DataJpaTest(properties = {
-    "spring.flyway.enabled=false", "spring.datasource.password=",
-    "spring.jpa.hibernate.ddl-auto=create-drop"
-})
+@DataJpaTest(
+        properties = {
+            "spring.flyway.enabled=false",
+            "spring.datasource.password=",
+            "spring.jpa.hibernate.ddl-auto=create-drop"
+        })
 @Import({WishService.class, ProductService.class})
 class WishServiceTest {
 
-    @Autowired
-    private WishService service;
+    @Autowired private WishService service;
 
-    @Autowired
-    private ProductService productService;
+    @Autowired private ProductService productService;
 
-    @Autowired
-    private WishRepository wishes;
+    @Autowired private WishRepository wishes;
 
-    @Autowired
-    private MemberRepository members;
+    @Autowired private MemberRepository members;
 
-    @Autowired
-    private ProductRepository products;
+    @Autowired private ProductRepository products;
 
-    @Autowired
-    private EntityManager entityManager;
+    @Autowired private EntityManager entityManager;
 
-    @MockitoBean
-    private ProfanityChecker profanityChecker;
+    @MockitoBean private ProfanityChecker profanityChecker;
 
     private Member owner;
     private Member other;
@@ -88,7 +83,8 @@ class WishServiceTest {
         WishResponse owned = service.add(owner.getId(), product.getId());
         service.add(other.getId(), product.getId());
         entityManager.clear();
-        assertThat(service.findAll(owner.getId())).extracting(WishResponse::id)
+        assertThat(service.findAll(owner.getId()))
+                .extracting(WishResponse::id)
                 .containsExactly(owned.id());
     }
 
@@ -128,7 +124,8 @@ class WishServiceTest {
     void deletingProductRemovesItsWishesForAllMembersOnly() {
         service.add(owner.getId(), product.getId());
         service.add(other.getId(), product.getId());
-        Product kept = products.saveAndFlush(new Product("mouse", 2000, "https://example.com/b.jpg"));
+        Product kept =
+                products.saveAndFlush(new Product("mouse", 2000, "https://example.com/b.jpg"));
         WishResponse keptWish = service.add(owner.getId(), kept.getId());
         productService.delete(product.getId());
         entityManager.flush();

@@ -7,8 +7,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 class PasswordConfigTest {
 
-    private final PasswordEncoder passwordEncoder =
-            new PasswordConfig().passwordEncoder();
+    private final PasswordEncoder passwordEncoder = new PasswordConfig().passwordEncoder();
 
     @Test
     void encodesPasswordAndMatchesOriginal() {
@@ -16,16 +15,14 @@ class PasswordConfigTest {
         String encodedPassword = passwordEncoder.encode(rawPassword);
 
         assertThat(encodedPassword).isNotEqualTo(rawPassword);
-        assertThat(passwordEncoder.matches(rawPassword, encodedPassword))
-                .isTrue();
+        assertThat(passwordEncoder.matches(rawPassword, encodedPassword)).isTrue();
     }
 
     @Test
     void rejectsWrongPassword() {
         String encodedPassword = passwordEncoder.encode("password123!");
 
-        assertThat(passwordEncoder.matches("wrong-password", encodedPassword))
-                .isFalse();
+        assertThat(passwordEncoder.matches("wrong-password", encodedPassword)).isFalse();
     }
 
     @Test

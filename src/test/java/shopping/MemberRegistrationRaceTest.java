@@ -17,11 +17,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @ExtendWith(MockitoExtension.class)
 class MemberRegistrationRaceTest {
 
-    @Mock
-    private MemberRepository repository;
+    @Mock private MemberRepository repository;
 
-    @Mock
-    private PasswordEncoder passwordEncoder;
+    @Mock private PasswordEncoder passwordEncoder;
 
     @ParameterizedTest
     @CsvSource({"23000, 1062", "23505, 0"})

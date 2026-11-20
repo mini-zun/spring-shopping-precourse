@@ -29,15 +29,16 @@ public class TokenService {
         byte[] bytes = new byte[32];
         random.nextBytes(bytes);
         String token = Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
-        repository.save(new MemberToken(
-                hashToken(token), member, clock.instant().plus(TOKEN_LIFETIME)));
+        repository.save(
+                new MemberToken(hashToken(token), member, clock.instant().plus(TOKEN_LIFETIME)));
         return new AuthTokenResponse(token, "Bearer", TOKEN_LIFETIME.toSeconds());
     }
 
     static String hashToken(String token) {
         try {
-            byte[] digest = MessageDigest.getInstance("SHA-256")
-                    .digest(token.getBytes(StandardCharsets.UTF_8));
+            byte[] digest =
+                    MessageDigest.getInstance("SHA-256")
+                            .digest(token.getBytes(StandardCharsets.UTF_8));
             return HexFormat.of().formatHex(digest);
         } catch (NoSuchAlgorithmException exception) {
             throw new IllegalStateException("SHA-256을 사용할 수 없습니다.", exception);
@@ -49,8 +50,8 @@ public class TokenService {
         if (token == null || token.isBlank()) {
             throw new InvalidTokenException();
         }
-        MemberToken stored = repository.findById(hashToken(token))
-                .orElseThrow(InvalidTokenException::new);
+        MemberToken stored =
+                repository.findById(hashToken(token)).orElseThrow(InvalidTokenException::new);
         if (!stored.getExpiresAt().isAfter(clock.instant())) {
             throw new InvalidTokenException();
         }

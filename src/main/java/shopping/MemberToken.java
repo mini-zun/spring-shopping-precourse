@@ -22,8 +22,7 @@ public class MemberToken {
     @Column(nullable = false)
     private Instant expiresAt;
 
-    protected MemberToken() {
-    }
+    protected MemberToken() {}
 
     public MemberToken(String tokenHash, Member member, Instant expiresAt) {
         this.tokenHash = tokenHash;

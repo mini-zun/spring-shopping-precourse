@@ -15,16 +15,12 @@ public class PurgoMalumClient implements ProfanityChecker {
 
     @Autowired
     public PurgoMalumClient(RestClient.Builder builder) {
-        HttpClient httpClient = HttpClient.newBuilder()
-                .connectTimeout(Duration.ofSeconds(3))
-                .build();
-        JdkClientHttpRequestFactory factory =
-                new JdkClientHttpRequestFactory(httpClient);
+        HttpClient httpClient =
+                HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(3)).build();
+        JdkClientHttpRequestFactory factory = new JdkClientHttpRequestFactory(httpClient);
         factory.setReadTimeout(Duration.ofSeconds(3));
-        this.restClient = builder
-                .baseUrl("https://www.purgomalum.com")
-                .requestFactory(factory)
-                .build();
+        this.restClient =
+                builder.baseUrl("https://www.purgomalum.com").requestFactory(factory).build();
     }
 
     PurgoMalumClient(RestClient restClient) {
@@ -34,10 +30,12 @@ public class PurgoMalumClient implements ProfanityChecker {
     @Override
     public boolean containsProfanity(String text) {
         try {
-            String response = restClient.get()
-                    .uri("/service/containsprofanity?text={text}", text)
-                    .retrieve()
-                    .body(String.class);
+            String response =
+                    restClient
+                            .get()
+                            .uri("/service/containsprofanity?text={text}", text)
+                            .retrieve()
+                            .body(String.class);
             return parseResponse(response);
         } catch (RestClientException exception) {
             throw new ProfanityServiceUnavailableException(exception);
