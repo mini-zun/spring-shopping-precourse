@@ -172,129 +172,185 @@ class ProductControllerTest {
                                 .andExpect(status().isNotFound());
         }
 
-    @ParameterizedTest
-    @MethodSource("invalidProductRequests")
-    void createRejectsInvalidInput(String body) throws Exception {
-        mockMvc.perform(post("/api/products")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(body))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code").value("INVALID_REQUEST"))
-                .andExpect(jsonPath("$.message").isNotEmpty());
+        @ParameterizedTest
+        @MethodSource("invalidProductRequests")
+        void createRejectsInvalidInput(String body) throws Exception {
+                mockMvc.perform(post("/api/products")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(body))
+                                .andExpect(status().isBadRequest())
+                                .andExpect(jsonPath("$.code").value("INVALID_REQUEST"))
+                                .andExpect(jsonPath("$.message").isNotEmpty());
 
-        verifyNoInteractions(productService);
-    }
+                verifyNoInteractions(productService);
+        }
 
-    @ParameterizedTest
-    @MethodSource("invalidProductRequests")
-    void updateRejectsInvalidInput(String body) throws Exception {
-        mockMvc.perform(put("/api/products/1")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(body))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code").value("INVALID_REQUEST"))
-                .andExpect(jsonPath("$.message").isNotEmpty());
+        @ParameterizedTest
+        @MethodSource("invalidProductRequests")
+        void updateRejectsInvalidInput(String body) throws Exception {
+                mockMvc.perform(put("/api/products/1")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(body))
+                                .andExpect(status().isBadRequest())
+                                .andExpect(jsonPath("$.code").value("INVALID_REQUEST"))
+                                .andExpect(jsonPath("$.message").isNotEmpty());
 
-        verifyNoInteractions(productService);
-    }
+                verifyNoInteractions(productService);
+        }
 
-    @ParameterizedTest
-    @CsvSource({
-        "'()[]+-&/_', http://example.com/a.jpg",
-        "abcdefghijklmno, https://example.com/a.jpg",
-        "'상품 A', https://example.com/a.jpg"
-    })
-    void createAcceptsValidFormat(String name, String imageUrl) throws Exception {
-        Product product = savedProduct();
-        given(productService.create(name, 0, imageUrl)).willReturn(product);
-        String body = productJson("\"" + name + "\"", "0", "\"" + imageUrl + "\"");
+        @ParameterizedTest
+        @CsvSource({
+                        "'()[]+-&/_', http://example.com/a.jpg",
+                        "abcdefghijklmno, https://example.com/a.jpg",
+                        "'상품 A', https://example.com/a.jpg"
+        })
+        void createAcceptsValidFormat(String name, String imageUrl) throws Exception {
+                Product product = savedProduct();
+                given(productService.create(name, 0, imageUrl)).willReturn(product);
+                String body = productJson("\"" + name + "\"", "0", "\"" + imageUrl + "\"");
 
-        mockMvc.perform(post("/api/products")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(body))
-                .andExpect(status().isCreated());
+                mockMvc.perform(post("/api/products")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(body))
+                                .andExpect(status().isCreated());
 
-        verify(productService).create(name, 0, imageUrl);
-    }
+                verify(productService).create(name, 0, imageUrl);
+        }
 
-    @ParameterizedTest
-    @CsvSource({
-        "'()[]+-&/_', http://example.com/a.jpg",
-        "abcdefghijklmno, https://example.com/a.jpg",
-        "'상품 A', https://example.com/a.jpg"
-    })
-    void updateAcceptsValidFormat(String name, String imageUrl) throws Exception {
-        Product product = savedProduct();
-        given(productService.update(1L, name, 0, imageUrl)).willReturn(product);
-        String body = productJson("\"" + name + "\"", "0", "\"" + imageUrl + "\"");
+        @ParameterizedTest
+        @CsvSource({
+                        "'()[]+-&/_', http://example.com/a.jpg",
+                        "abcdefghijklmno, https://example.com/a.jpg",
+                        "'상품 A', https://example.com/a.jpg"
+        })
+        void updateAcceptsValidFormat(String name, String imageUrl) throws Exception {
+                Product product = savedProduct();
+                given(productService.update(1L, name, 0, imageUrl)).willReturn(product);
+                String body = productJson("\"" + name + "\"", "0", "\"" + imageUrl + "\"");
 
-        mockMvc.perform(put("/api/products/1")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(body))
-                .andExpect(status().isOk());
+                mockMvc.perform(put("/api/products/1")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(body))
+                                .andExpect(status().isOk());
 
-        verify(productService).update(1L, name, 0, imageUrl);
-    }
+                verify(productService).update(1L, name, 0, imageUrl);
+        }
 
-    @ParameterizedTest
-    @ValueSource(strings = {"{", "{\"name\":\"keyboard\",\"price\":\"abc\"}"})
-    void createRejectsUnreadableJson(String body) throws Exception {
-        mockMvc.perform(post("/api/products")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(body))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code").value("INVALID_REQUEST"))
-                .andExpect(jsonPath("$.message")
-                        .value("요청 JSON 형식이나 값의 타입이 올바르지 않습니다."));
+        @ParameterizedTest
+        @ValueSource(strings = { "{", "{\"name\":\"keyboard\",\"price\":\"abc\"}" })
+        void createRejectsUnreadableJson(String body) throws Exception {
+                mockMvc.perform(post("/api/products")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(body))
+                                .andExpect(status().isBadRequest())
+                                .andExpect(jsonPath("$.code").value("INVALID_REQUEST"))
+                                .andExpect(jsonPath("$.message")
+                                                .value("요청 JSON 형식이나 값의 타입이 올바르지 않습니다."));
 
-        verifyNoInteractions(productService);
-    }
+                verifyNoInteractions(productService);
+        }
 
-    @ParameterizedTest
-    @ValueSource(strings = {"{", "{\"name\":\"keyboard\",\"price\":\"abc\"}"})
-    void updateRejectsUnreadableJson(String body) throws Exception {
-        mockMvc.perform(put("/api/products/1")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(body))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code").value("INVALID_REQUEST"))
-                .andExpect(jsonPath("$.message")
-                        .value("요청 JSON 형식이나 값의 타입이 올바르지 않습니다."));
+        @ParameterizedTest
+        @ValueSource(strings = { "{", "{\"name\":\"keyboard\",\"price\":\"abc\"}" })
+        void updateRejectsUnreadableJson(String body) throws Exception {
+                mockMvc.perform(put("/api/products/1")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(body))
+                                .andExpect(status().isBadRequest())
+                                .andExpect(jsonPath("$.code").value("INVALID_REQUEST"))
+                                .andExpect(jsonPath("$.message")
+                                                .value("요청 JSON 형식이나 값의 타입이 올바르지 않습니다."));
 
-        verifyNoInteractions(productService);
-    }
+                verifyNoInteractions(productService);
+        }
 
-    private static Stream<String> invalidProductRequests() {
-        return Stream.concat(invalidBasicRequests(), invalidFormatRequests());
-    }
+        private static Stream<String> invalidProductRequests() {
+                return Stream.concat(invalidBasicRequests(), invalidFormatRequests());
+        }
 
-    private static Stream<String> invalidBasicRequests() {
-        return Stream.of(
-                productJson("null", "1000", "\"https://example.com/a.jpg\""),
-                productJson("\"\"", "1000", "\"https://example.com/a.jpg\""),
-                productJson("\"   \"", "1000", "\"https://example.com/a.jpg\""),
-                productJson("\"abcdefghijklmnop\"", "1000", "\"https://example.com/a.jpg\""),
-                productJson("\"keyboard\"", "null", "\"https://example.com/a.jpg\""),
-                productJson("\"keyboard\"", "-1", "\"https://example.com/a.jpg\""),
-                productJson("\"keyboard\"", "1000", "null"),
-                productJson("\"keyboard\"", "1000", "\"   \"")
-        );
-    }
+        private static Stream<String> invalidBasicRequests() {
+                return Stream.of(
+                                productJson("null", "1000", "\"https://example.com/a.jpg\""),
+                                productJson("\"\"", "1000", "\"https://example.com/a.jpg\""),
+                                productJson("\"   \"", "1000", "\"https://example.com/a.jpg\""),
+                                productJson("\"abcdefghijklmnop\"", "1000", "\"https://example.com/a.jpg\""),
+                                productJson("\"keyboard\"", "null", "\"https://example.com/a.jpg\""),
+                                productJson("\"keyboard\"", "-1", "\"https://example.com/a.jpg\""),
+                                productJson("\"keyboard\"", "1000", "null"),
+                                productJson("\"keyboard\"", "1000", "\"   \""));
+        }
 
-    private static Stream<String> invalidFormatRequests() {
-        return Stream.of(
-                productJson("\"상품@\"", "1000", "\"https://example.com/a.jpg\""),
-                productJson("\"특가!\"", "1000", "\"https://example.com/a.jpg\""),
-                productJson("\"상품*\"", "1000", "\"https://example.com/a.jpg\""),
-                productJson("\"keyboard\"", "1000", "\"not-a-url\""),
-                productJson("\"keyboard\"", "1000", "\"ftp://example.com/a.jpg\""),
-                productJson("\"keyboard\"", "1000", "\"https://\"")
-        );
-    }
+        private static Stream<String> invalidFormatRequests() {
+                return Stream.of(
+                                productJson("\"상품@\"", "1000", "\"https://example.com/a.jpg\""),
+                                productJson("\"특가!\"", "1000", "\"https://example.com/a.jpg\""),
+                                productJson("\"상품*\"", "1000", "\"https://example.com/a.jpg\""),
+                                productJson("\"keyboard\"", "1000", "\"not-a-url\""),
+                                productJson("\"keyboard\"", "1000", "\"ftp://example.com/a.jpg\""),
+                                productJson("\"keyboard\"", "1000", "\"https://\""));
+        }
 
-    private static String productJson(String name, String price, String imageUrl) {
-        return """
-                {"name": %s, "price": %s, "imageUrl": %s}
-                """.formatted(name, price, imageUrl);
-    }
+        private static String productJson(String name, String price, String imageUrl) {
+                return """
+                                {"name": %s, "price": %s, "imageUrl": %s}
+                                """.formatted(name, price, imageUrl);
+        }
+
+        @Test
+        void createReturnsBadRequestWhenProfanityIsDetected() throws Exception {
+                given(productService.create(
+                                "키보드", 50000, "https://example.com/keyboard.jpg"))
+                                .willThrow(new ProfanityDetectedException());
+
+                mockMvc.perform(post("/api/products")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(requestBody()))
+                                .andExpect(status().isBadRequest())
+                                .andExpect(jsonPath("$.code").value("PROFANITY_DETECTED"))
+                                .andExpect(jsonPath("$.message")
+                                                .value("상품 이름에 비속어를 포함할 수 없습니다."));
+        }
+
+        @Test
+        void updateReturnsBadRequestWhenProfanityIsDetected() throws Exception {
+                given(productService.update(
+                                1L, "키보드", 50000, "https://example.com/keyboard.jpg"))
+                                .willThrow(new ProfanityDetectedException());
+
+                mockMvc.perform(put("/api/products/1")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(requestBody()))
+                                .andExpect(status().isBadRequest())
+                                .andExpect(jsonPath("$.code").value("PROFANITY_DETECTED"))
+                                .andExpect(jsonPath("$.message")
+                                                .value("상품 이름에 비속어를 포함할 수 없습니다."));
+        }
+
+        @Test
+        void createReturnsUnavailableWhenProfanityServiceFails() throws Exception {
+                given(productService.create(
+                                "키보드", 50000, "https://example.com/keyboard.jpg"))
+                                .willThrow(new ProfanityServiceUnavailableException());
+
+                mockMvc.perform(post("/api/products")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(requestBody()))
+                                .andExpect(status().isServiceUnavailable())
+                                .andExpect(jsonPath("$.code").value("PROFANITY_SERVICE_UNAVAILABLE"))
+                                .andExpect(jsonPath("$.message").isNotEmpty());
+        }
+
+        @Test
+        void updateReturnsUnavailableWhenProfanityServiceFails() throws Exception {
+                given(productService.update(
+                                1L, "키보드", 50000, "https://example.com/keyboard.jpg"))
+                                .willThrow(new ProfanityServiceUnavailableException());
+
+                mockMvc.perform(put("/api/products/1")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(requestBody()))
+                                .andExpect(status().isServiceUnavailable())
+                                .andExpect(jsonPath("$.code").value("PROFANITY_SERVICE_UNAVAILABLE"))
+                                .andExpect(jsonPath("$.message").isNotEmpty());
+        }
 }
