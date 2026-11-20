@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import jakarta.validation.Valid;
+
 
 @RestController
 @RequestMapping("/api/products")
@@ -23,7 +25,7 @@ public class ProductController {
 
     @PostMapping
     public ResponseEntity<ProductResponse> create(
-            @RequestBody ProductCreateRequest request) {
+            @Valid @RequestBody ProductCreateRequest request) {
         Product product = productService.create(request.name(), request.price(), request.imageUrl());
         URI location = URI.create("/api/products/" + product.getId());
         return ResponseEntity.created(location).body(ProductResponse.from(product));
@@ -44,7 +46,7 @@ public class ProductController {
     @PutMapping("/{productId}")
     public ProductResponse update(
             @PathVariable("productId") Long productId,
-            @RequestBody ProductUpdateRequest request) {
+            @Valid @RequestBody ProductUpdateRequest request) {
         Product product = productService.update(productId, request.name(), request.price(), request.imageUrl());
         return ProductResponse.from(product);
     }

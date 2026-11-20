@@ -10,6 +10,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 
 import org.junit.jupiter.api.Test;
@@ -19,6 +20,9 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import java.util.List;
+import java.util.stream.Stream;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 @WebMvcTest(ProductController.class)
 class ProductControllerTest {
@@ -163,4 +167,45 @@ class ProductControllerTest {
                 mockMvc.perform(delete("/api/products/-1"))
                                 .andExpect(status().isNotFound());
         }
+
+    @ParameterizedTest
+    @MethodSource("invalidProductRequests")
+    void createRejectsInvalidInput(String body) throws Exception {
+        mockMvc.perform(post("/api/products")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(productService);
+    }
+
+    @ParameterizedTest
+    @MethodSource("invalidProductRequests")
+    void updateRejectsInvalidInput(String body) throws Exception {
+        mockMvc.perform(put("/api/products/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(productService);
+    }
+
+    private static Stream<String> invalidProductRequests() {
+        return Stream.of(
+                productJson("null", "1000", "\"https://example.com/a.jpg\""),
+                productJson("\"\"", "1000", "\"https://example.com/a.jpg\""),
+                productJson("\"   \"", "1000", "\"https://example.com/a.jpg\""),
+                productJson("\"abcdefghijklmnop\"", "1000", "\"https://example.com/a.jpg\""),
+                productJson("\"keyboard\"", "null", "\"https://example.com/a.jpg\""),
+                productJson("\"keyboard\"", "-1", "\"https://example.com/a.jpg\""),
+                productJson("\"keyboard\"", "1000", "null"),
+                productJson("\"keyboard\"", "1000", "\"   \"")
+        );
+    }
+
+    private static String productJson(String name, String price, String imageUrl) {
+        return """
+                {"name": %s, "price": %s, "imageUrl": %s}
+                """.formatted(name, price, imageUrl);
+    }
 }
