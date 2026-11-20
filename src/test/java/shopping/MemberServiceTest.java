@@ -73,4 +73,36 @@ class MemberServiceTest {
         assertThat(passwordEncoder.matches(" password123! ", found.getPasswordHash())).isTrue();
         assertThat(passwordEncoder.matches("password123!", found.getPasswordHash())).isFalse();
     }
+
+    @Test
+    void loginNormalizesEmailAndChecksPassword() {
+        Member saved = memberService.register("member@example.com", "password123!");
+        entityManager.clear();
+        Member found = memberService.login("  MEMBER@EXAMPLE.COM  ", "password123!");
+        assertThat(found.getId()).isEqualTo(saved.getId());
+    }
+
+    @Test
+    void loginRejectsUnknownEmail() {
+        assertThatThrownBy(() -> memberService.login("missing@example.com", "password123!"))
+                .isInstanceOf(InvalidCredentialsException.class)
+                .hasMessage("이메일 또는 비밀번호가 올바르지 않습니다.");
+    }
+
+    @Test
+    void loginRejectsWrongPassword() {
+        memberService.register("member@example.com", "password123!");
+        assertThatThrownBy(() -> memberService.login("member@example.com", "wrong-password"))
+                .isInstanceOf(InvalidCredentialsException.class)
+                .hasMessage("이메일 또는 비밀번호가 올바르지 않습니다.");
+    }
+
+    @Test
+    void loginPreservesPasswordWhitespace() {
+        Member saved = memberService.register("member@example.com", " password123! ");
+        assertThat(memberService.login("member@example.com", " password123! ").getId())
+                .isEqualTo(saved.getId());
+        assertThatThrownBy(() -> memberService.login("member@example.com", "password123!"))
+                .isInstanceOf(InvalidCredentialsException.class);
+    }
 }
