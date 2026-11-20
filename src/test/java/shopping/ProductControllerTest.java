@@ -28,6 +28,9 @@ import org.junit.jupiter.params.provider.CsvSource;
 
 @WebMvcTest(ProductController.class)
 class ProductControllerTest {
+    @MockitoBean
+    private MemberAuthenticator memberAuthenticator;
+
         @Autowired
         private MockMvc mockMvc;
 
