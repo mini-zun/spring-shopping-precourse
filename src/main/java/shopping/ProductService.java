@@ -8,12 +8,15 @@ import java.util.List;
 public class ProductService {
     private final ProductRepository productRepository;
     private final ProfanityChecker profanityChecker;
+    private final WishRepository wishRepository;
 
     public ProductService(
             ProductRepository productRepository,
-            ProfanityChecker profanityChecker) {
+            ProfanityChecker profanityChecker,
+            WishRepository wishRepository) {
         this.productRepository = productRepository;
         this.profanityChecker = profanityChecker;
+        this.wishRepository = wishRepository;
     }
 
     @Transactional
@@ -44,8 +47,10 @@ public class ProductService {
     }
 
     @Transactional
-    public void delete(Long proudctId) {
-        Product product = findById(proudctId);
+    public void delete(Long productId) {
+        Product product = productRepository.findByIdForUpdate(productId)
+                .orElseThrow(() -> new ProductNotFoundException(productId));
+        wishRepository.deleteAllByProduct_Id(productId);
         productRepository.delete(product);
     }
 
