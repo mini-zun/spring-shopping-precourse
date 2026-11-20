@@ -43,4 +43,17 @@ public class TokenService {
             throw new IllegalStateException("SHA-256을 사용할 수 없습니다.", exception);
         }
     }
+
+    @Transactional(readOnly = true)
+    public Long authenticate(String token) {
+        if (token == null || token.isBlank()) {
+            throw new InvalidTokenException();
+        }
+        MemberToken stored = repository.findById(hashToken(token))
+                .orElseThrow(InvalidTokenException::new);
+        if (!stored.getExpiresAt().isAfter(clock.instant())) {
+            throw new InvalidTokenException();
+        }
+        return stored.getMemberId();
+    }
 }
