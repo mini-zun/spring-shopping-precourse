@@ -27,4 +27,9 @@ public record ProductUpdateRequest(
         )
         String imageUrl
 ) {
+    public ProductUpdateRequest {
+        if (name != null) {
+            name = name.strip();
+        }
+    }
 }

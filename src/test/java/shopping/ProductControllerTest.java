@@ -264,6 +264,40 @@ class ProductControllerTest {
                 verifyNoInteractions(productService);
         }
 
+    @ParameterizedTest
+    @CsvSource({
+        "'  keyboard  ', keyboard",
+        "'  상품 A  ', '상품 A'",
+        "' abcdefghijklmno ', abcdefghijklmno"
+    })
+    void createStripsNameBeforeValidation(String raw, String expected) throws Exception {
+        Product product = savedProduct();
+        String url = "https://example.com/a.jpg";
+        given(productService.create(expected, 0, url)).willReturn(product);
+        String body = productJson("\"" + raw + "\"", "0", "\"" + url + "\"");
+        mockMvc.perform(post("/api/products")
+                        .contentType(MediaType.APPLICATION_JSON).content(body))
+                .andExpect(status().isCreated());
+        verify(productService).create(expected, 0, url);
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+        "'  keyboard  ', keyboard",
+        "'  상품 A  ', '상품 A'",
+        "' abcdefghijklmno ', abcdefghijklmno"
+    })
+    void updateStripsNameBeforeValidation(String raw, String expected) throws Exception {
+        Product product = savedProduct();
+        String url = "https://example.com/a.jpg";
+        given(productService.update(1L, expected, 0, url)).willReturn(product);
+        String body = productJson("\"" + raw + "\"", "0", "\"" + url + "\"");
+        mockMvc.perform(put("/api/products/1")
+                        .contentType(MediaType.APPLICATION_JSON).content(body))
+                .andExpect(status().isOk());
+        verify(productService).update(1L, expected, 0, url);
+    }
+
         private static Stream<String> invalidProductRequests() {
                 return Stream.concat(invalidBasicRequests(), invalidFormatRequests());
         }
@@ -274,6 +308,7 @@ class ProductControllerTest {
                                 productJson("\"\"", "1000", "\"https://example.com/a.jpg\""),
                                 productJson("\"   \"", "1000", "\"https://example.com/a.jpg\""),
                                 productJson("\"abcdefghijklmnop\"", "1000", "\"https://example.com/a.jpg\""),
+                                productJson("\" abcdefghijklmnop \"", "1000", "\"https://example.com/a.jpg\""),
                                 productJson("\"keyboard\"", "null", "\"https://example.com/a.jpg\""),
                                 productJson("\"keyboard\"", "-1", "\"https://example.com/a.jpg\""),
                                 productJson("\"keyboard\"", "1000", "null"),

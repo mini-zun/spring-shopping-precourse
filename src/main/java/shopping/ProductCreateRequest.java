@@ -26,4 +26,9 @@ public record ProductCreateRequest(
                 )
                 String imageUrl
         ) {
+    public ProductCreateRequest {
+        if (name != null) {
+            name = name.strip();
+        }
+    }
 }
